@@ -20,8 +20,8 @@ pub enum ContractError {
     NotFactory = 3,
     /// Market contract is not registered or approved
     UnregisteredMarket = 6,
-    /// Pending admin transfer proposal has expired
-    PendingAdminExpired = 7,
+    /// Admin transfer proposal acceptance window has elapsed
+    AdminTransferExpired = 7,
     /// Admin timelock is active; proposal cannot be accepted yet
     AdminTimelockActive = 8,
 
@@ -120,10 +120,44 @@ pub enum ContractError {
     SlippageExceeded = 61,
 
     // ── Reserve ────────────────────────────────────────────
-    /// Withdrawal would bring the treasury balance below the configured minimum reserve
-    InsufficientReserve = 62,
+    /// Withdrawal would bring treasury reserves below the configured reserve floor.
+    ReserveFloorBreached = 62,
+    /// Caller does not hold enough tokens to fund the requested seed liquidity.
+    InsufficientSeedLiquidity = 63,
 
     // ── Arithmetic ─────────────────────────────────────────
-    /// Arithmetic operation resulted in overflow
-    ArithmeticOverflow = 70,
+    /// Multiply-divide result cannot be represented as i128
+    MathOverflow = 70,
+
+    // ── Fighter / Fight Validation ──────────────────────────
+    /// Both fighter names resolve to the same identity after normalisation
+    DuplicateFighterName = 71,
+    /// Fight date is in the past or does not meet the minimum market duration
+    InvalidFightDate = 72,
+
+    // ── Market Lifecycle ───────────────────────────────────
+    /// ALLOW_DRAW cannot be toggled after bets have been placed
+    BetsAlreadyPlaced = 73,
+
+    // ── Treasury ───────────────────────────────────────────
+    /// Fee-split basis points do not sum to exactly 10 000 or contain duplicate recipients
+    InvalidFeeSplit = 74,
+}
+
+// Preserve the legacy source-level names without growing Soroban's exported
+// error specification, which is already at its maximum number of cases.
+#[allow(non_upper_case_globals)]
+impl ContractError {
+    /// Legacy name for `AdminTransferExpired`.
+    pub const PendingAdminExpired: Self = Self::AdminTransferExpired;
+    /// Legacy name for `MathOverflow`.
+    pub const ArithmeticOverflow: Self = Self::MathOverflow;
+    /// AMM could not allocate shares for the requested bet.
+    pub const ZeroSharesAllocated: Self = Self::SlippageExceeded;
+}
+
+impl ContractError {
+    /// Backwards-compatible name retained for callers using the former reserve error.
+    #[allow(non_upper_case_globals)]
+    pub const InsufficientReserve: Self = Self::ReserveFloorBreached;
 }
